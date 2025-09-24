@@ -13,6 +13,8 @@ import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import android.view.LayoutInflater
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.core.content.ContextCompat.getSystemService
 
 class MainActivity : AppCompatActivity() {
@@ -20,12 +22,17 @@ class MainActivity : AppCompatActivity() {
     var adapter: PeliculaAdapter? = null
     var peliculas = ArrayList<Pelicula>()
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        cargarPeliculas()
+
+        var gridview: GridView = findViewById<GridView>(R.id.gridview)
         adapter = PeliculaAdapter(this, peliculas)
-        //gridview.adapter = adapter
+        gridview.adapter = adapter
     }
 
     fun cargarPeliculas(){
@@ -41,8 +48,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     class PeliculaAdapter: BaseAdapter {
+
         var peliculas = ArrayList<Pelicula>()
-        var context: Context? = null
+        var context: Context
+
+        private data class RowHolder(
+            val poster: ImageView,
+            val title: TextView
+        )
+
 
         constructor(context: Context, peliculas: ArrayList<Pelicula>) {
             this.context=context
@@ -50,22 +64,51 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun getCount(): Int {
-            TODO("Not yet implemented")
+            return peliculas.size
         }
 
-        override fun getItem(position: Int): Any? {
-            TODO("Not yet implemented")
+        override fun getItem(p0: Int): Any? {
+           return peliculas[p0]
         }
 
-        override fun getItemId(position: Int): Long {
-            TODO("Not yet implemented")
+        override fun getItemId(p0: Int): Long {
+            return p0.toLong()
         }
 
-//        override fun getView(p0: Int, p1: View?, p2: ViewGroup?): View {
-//            var pelicula = peliculas[p0]
-//            //var inflador = context||.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-//
-//        }
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+            val holder: RowHolder
+            val view: View
+
+            if (convertView == null) {
+                view = LayoutInflater.from(context).inflate(R.layout.pelicula, parent, false)
+                holder = RowHolder(
+                    poster = view.findViewById(R.id.iv_pelicula),
+                    title = view.findViewById(R.id.tv_nombre_pelicula)
+                )
+                view.tag = holder
+            } else {
+                view = convertView
+                holder = view.tag as RowHolder
+            }
+
+            val pelicula = peliculas[position]
+            holder.poster.setImageResource(pelicula.image)
+            holder.title.text = pelicula.titulo
+
+            // Por qué: usamos el contexto de Activity para iniciar otra Activity.
+            view.setOnClickListener {
+                val intent = Intent(context, DetallePelicula::class.java).apply {
+                    putExtra("nombre", pelicula.titulo)
+                    putExtra("image", pelicula.image)   // opcional (no usado en Detalle)
+                    putExtra("header", pelicula.header)
+                    putExtra("sinopsis", pelicula.sinopsis)
+                }
+                view.context.startActivity(intent)
+            }
+
+            return view
+
+        }
 
 
     }
